@@ -3,8 +3,12 @@ package com.finatiol.productos.service;
 import com.finatiol.productos.dto.ProductoRequestDTO;
 import com.finatiol.productos.dto.ProductoResponseDTO;
 import com.finatiol.productos.entity.ProductoEntity;
+import com.finatiol.common.exception.ResourceNotFoundException;
 import com.finatiol.productos.exception.ProductoNoEncontradoException;
 import com.finatiol.productos.repository.ProductoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -95,6 +99,46 @@ public class ProductoServiceImpl
                                         "Producto no encontrado con id: " + id));
 
         productoRepository.delete(producto);
+    }
+
+    @Override
+    public void descontarStock(Long id, Integer cantidad) {
+
+        ProductoEntity producto =
+                productoRepository
+                        .findById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Producto no encontrado"));
+
+        if (producto.getStock() < cantidad) {
+            throw new RuntimeException("Stock insuficiente");
+        }
+
+        producto.setStock(producto.getStock() - cantidad);
+        productoRepository.save(producto);
+    }
+
+    @Override
+    public List<ProductoResponseDTO> obtenerProductosActivos() {
+        return productoRepository.findByActivoTrue()
+                .stream()
+                .map(this::toResponseDTO)
+                .toList();
+    }
+
+    @Override
+    public Page<ProductoResponseDTO> obtenerProductosPaginados(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return productoRepository.findAll(pageable).map(this::toResponseDTO);
+    }
+
+    @Override
+    public List<ProductoResponseDTO> buscarProductos(String nombre) {
+        return productoRepository.findByNombreContainingIgnoreCase(nombre)
+                .stream()
+                .map(this::toResponseDTO)
+                .toList();
     }
 
     private ProductoResponseDTO toResponseDTO(

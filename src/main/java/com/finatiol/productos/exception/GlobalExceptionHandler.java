@@ -1,7 +1,8 @@
 package com.finatiol.productos.exception;
 
-import com.finatiol.productos.constants.ErrorCodes;
-import com.finatiol.productos.constants.ErrorMessages;
+import com.finatiol.common.exception.ResourceNotFoundException;
+import com.finatiol.common.constants.productos.ErrorCodes;
+import com.finatiol.common.constants.productos.ErrorMessages;
 import com.finatiol.productos.dto.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,15 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(
+            ResourceNotFoundException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ErrorCodes.PRODUCTO_NO_ENCONTRADO, ex.getMessage()));
+    }
 
     @ExceptionHandler(ProductoNoEncontradoException.class)
     public ResponseEntity<ApiResponse<Void>> handleProductoNoEncontrado(
