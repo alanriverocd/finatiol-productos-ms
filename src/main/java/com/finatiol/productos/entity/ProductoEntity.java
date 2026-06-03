@@ -1,9 +1,18 @@
 package com.finatiol.productos.entity;
 
+import com.finatiol.common.tenant.TenantContext;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "productos")
+@FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = String.class))
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 public class ProductoEntity {
 
     @Id
@@ -19,6 +28,20 @@ public class ProductoEntity {
     private Integer stock;
 
     private Boolean activo;
+
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OrderBy("orden ASC")
+    private List<ProductoImagenEntity> imagenes = new ArrayList<>();
+
+    @Column(name = "tenant_id")
+    private String tenantId;
+
+    @PrePersist
+    protected void onPrePersist() {
+        if (this.tenantId == null) {
+            this.tenantId = TenantContext.getCurrentTenant();
+        }
+}
 
     public Long getId() {
         return id;
@@ -68,5 +91,21 @@ public class ProductoEntity {
 
     public void setActivo(Boolean activo) {
         this.activo = activo;
+    }
+
+    public List<ProductoImagenEntity> getImagenes() {
+        return imagenes;
+    }
+
+    public void setImagenes(List<ProductoImagenEntity> imagenes) {
+        this.imagenes = imagenes;
+    }
+
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
     }
 }

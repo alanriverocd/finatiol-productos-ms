@@ -13,11 +13,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -32,17 +31,52 @@ public class ProductoController {
         this.productoService = productoService;
     }
 
-    @PostMapping
-    @Operation(summary = "Crear producto")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Crear producto con hasta 10 imágenes opcionales")
     public ResponseEntity<ApiResponse<ProductoResponseDTO>> crearProducto(
-            @Valid @RequestBody ProductoRequestDTO request) {
+            @RequestParam String nombre,
+            @RequestParam(required = false) String descripcion,
+            @RequestParam Double precio,
+            @RequestParam Integer stock,
+            @RequestParam(value = "imagenes", required = false) List<MultipartFile> imagenes) {
+
+        ProductoRequestDTO request = new ProductoRequestDTO();
+        request.setNombre(nombre);
+        request.setDescripcion(descripcion);
+        request.setPrecio(precio);
+        request.setStock(stock);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(
                         SuccessCodes.PRODUCTO_CREADO,
                         SuccessMessages.PRODUCTO_CREADO,
-                        productoService.crearProducto(request)));
+                        productoService.crearProducto(request, imagenes)));
+    }
+
+    @PostMapping(value = "/{id}/imagenes", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Agregar imágenes a un producto existente (máx. 10 en total)")
+    public ResponseEntity<ApiResponse<ProductoResponseDTO>> agregarImagenes(
+            @PathVariable Long id,
+            @RequestParam("imagenes") List<MultipartFile> imagenes) {
+
+        return ResponseEntity.ok(ApiResponse.success(
+                SuccessCodes.PRODUCTO_ACTUALIZADO,
+                SuccessMessages.PRODUCTO_ACTUALIZADO,
+                productoService.agregarImagenes(id, imagenes)));
+    }
+
+    @DeleteMapping("/{id}/imagenes/{imagenId}")
+    @Operation(summary = "Eliminar una imagen específica de un producto")
+    public ResponseEntity<ApiResponse<Void>> eliminarImagen(
+            @PathVariable Long id,
+            @PathVariable Long imagenId) {
+
+        productoService.eliminarImagenDeProducto(id, imagenId);
+        return ResponseEntity.ok(ApiResponse.success(
+                SuccessCodes.PRODUCTO_ACTUALIZADO,
+                SuccessMessages.PRODUCTO_ACTUALIZADO,
+                null));
     }
 
     @GetMapping
@@ -130,5 +164,11 @@ public class ProductoController {
                 SuccessMessages.PRODUCTOS_OBTENIDOS,
                 200,
                 productoService.buscarProductos(nombre)));
+    }
+
+    @GetMapping("/resumen")
+    @Operation(summary = "Total de productos activos (para dashboard)")
+    public ResponseEntity<Long> resumenProductosActivos() {
+        return ResponseEntity.ok(productoService.contarProductosActivos());
     }
 }

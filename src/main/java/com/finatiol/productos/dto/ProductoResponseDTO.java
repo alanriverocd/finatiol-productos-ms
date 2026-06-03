@@ -1,5 +1,8 @@
 package com.finatiol.productos.dto;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ProductoResponseDTO {
 
     private Long id;
@@ -14,7 +17,10 @@ public class ProductoResponseDTO {
 
     private Boolean activo;
 
+    private List<ProductoImagenDTO> imagenes;
+
     public ProductoResponseDTO() {
+        this.imagenes = new ArrayList<>();
     }
 
     public ProductoResponseDTO(
@@ -23,7 +29,8 @@ public class ProductoResponseDTO {
             String descripcion,
             Double precio,
             Integer stock,
-            Boolean activo) {
+            Boolean activo,
+            List<ProductoImagenDTO> imagenes) {
 
         this.id = id;
         this.nombre = nombre;
@@ -31,6 +38,7 @@ public class ProductoResponseDTO {
         this.precio = precio;
         this.stock = stock;
         this.activo = activo;
+        this.imagenes = imagenes != null ? imagenes : new ArrayList<>();
     }
 
     public Long getId() {
@@ -80,4 +88,13 @@ public class ProductoResponseDTO {
     public void setActivo(Boolean activo) {
         this.activo = activo;
     }
+
+    public List<ProductoImagenDTO> getImagenes() {
+        return imagenes;
+    }
+
+    public void setImagenes(List<ProductoImagenDTO> imagenes) {
+        this.imagenes = imagenes;
+    }
 }
+
