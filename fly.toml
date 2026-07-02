@@ -1,0 +1,6 @@
+app = "REPLACE_WITH_APP_NAME"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
